@@ -240,4 +240,36 @@ def day5():
         if loc % 100000 == 0:
             print(loc) # keep track of progress   
 
-print(day5())
+
+def day6():
+    f = open('aoc6.txt', 'r').read().strip().split("\n")
+    ans = 1
+    
+    # times = [int(i) for i in f[0].split()[1:]] # for part 1
+    # distances = [int(i) for i in f[1].split()[1:]]
+
+    # manually entering was faster than trying to parse correctly
+    totaltime = 45977295
+    totaldistance = 305106211101695
+    
+    # pairs = [(times[i], distances[i]) for i in range(len(times))] # for part 1
+    pairs = [(totaltime, totaldistance)]
+    for pair in pairs:
+        t = pair[0]
+        d = pair[1]
+
+        # this heuristic works okay, but a two-sided binary search would be better
+        # on second thought we can just use the quadratic formula, solve j*(t-j)=d and find num of ints between the roots
+        for j in range(t+1):
+            if j*(t-j) > d:
+                minimum = j
+                break
+        for j in range(t+1, -1, -1):
+            if j*(t-j) > d:
+                maximum = j
+                break
+        ans *= (maximum-minimum+1)
+        
+    return ans
+
+print(day6())
