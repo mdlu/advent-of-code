@@ -272,4 +272,58 @@ def day6():
         
     return ans
 
-print(day6())
+
+def day7():
+    f = open('aoc7.txt', 'r').read().strip().split("\n")
+    ans = 0
+    m = {"five": [], "four": [], "full": [], "three": [], "twopair": [], "onepair": [], "high": []}
+    bids = {}
+
+    def score(cards):
+        carddict = defaultdict(int)
+        for c in cards:
+            carddict[c] += 1
+        
+        jokervalue = carddict.pop("0", None)
+        if jokervalue:
+            maxkey = max(carddict, key=carddict.get, default="0")
+            carddict[maxkey] += jokervalue
+
+        v = sorted(list(carddict.values()))
+        if v == [5]:
+            return "five"
+        elif v == [1,4]:
+            return "four"
+        elif v == [2,3]:
+            return "full"
+        elif v == [1,1,3]:
+            return "three"
+        elif v == [1,2,2]:
+            return "twopair"
+        elif v == [1,1,1,2]:
+            return "onepair"
+        else:
+            return "high"
+
+    for i in range(len(f)):
+        row = f[i].split()
+        # we replace the TJQKA to different values so that natively sorting the hands as strings works correctly
+        # cards = row[0].replace("T","V").replace("J","W").replace("Q","X").replace("K","Y").replace("A","Z") # for part 1
+        cards = row[0].replace("T","V").replace("J","0").replace("Q","X").replace("K","Y").replace("A","Z") # for part 2
+        bids[cards] = int(row[1])
+        k = score(cards)
+        m[k].append(cards)
+    
+    sortedhands = []
+    for key in ["five", "four", "full", "three", "twopair", "onepair", "high"]:
+        allhands = m[key]
+        sortedallhands = sorted(allhands, reverse=True)
+        sortedhands.extend(sortedallhands)
+    
+    for i in range(len(sortedhands)):
+        yourscore = (len(sortedhands)-i) * bids[sortedhands[i]]
+        ans += yourscore
+
+    return ans
+
+print(day7())
