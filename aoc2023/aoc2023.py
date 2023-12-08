@@ -1,4 +1,4 @@
-
+import math
 from collections import defaultdict
 
 def daytemp():
@@ -326,4 +326,55 @@ def day7():
 
     return ans
 
-print(day7())
+
+def day8():
+    f = open('aoc8.txt', 'r').read().strip().split("\n\n")
+    m = {}
+    lrs = f[0]
+    rest = f[1].split("\n")
+    for i in range(len(rest)):
+        row = rest[i]
+        rowsplit = row.split(" = ")
+        start = rowsplit[0]
+        paths = (rowsplit[1][1:4], rowsplit[1][6:9])  # ugly, but works
+        m[start] = paths
+    
+    # location = "AAA"  # for part 1
+    locations = [key for key in m if key.endswith('A')]
+    startlocations = locations.copy()
+    count = 0
+    k = 0
+    periods = {}
+    while True:
+        count += 1
+        # part 1
+        # if lrs[k] == 'L':
+        #     location = m[location][0]
+        # else:
+        #     location = m[location][1]
+        # if location == "ZZZ":
+        #     break
+        # k = (k+1) % len(lrs)
+        
+        destinations = []
+        for i in range(len(locations)):
+            location = locations[i]
+            if lrs[k] == 'L':
+                loc = m[location][0]
+            else:
+                loc = m[location][1]
+            if loc.endswith('Z') and startlocations[i] not in periods:
+                # so this appears to have been lucky... 
+                # there is no guarantee this should be the period, but the input happens to be built with this nice property
+                # otherwise, a proper solution would require finding an actual period and using the Chinese Remainder Theorem
+                periods[startlocations[i]] = count
+            destinations.append(loc)
+        if len(periods) == len(locations):
+            break
+        locations = destinations
+        k = (k+1) % len(lrs)
+    
+    # return count  # for part 1
+    return math.lcm(*list(periods.values()))
+
+print(day8())
