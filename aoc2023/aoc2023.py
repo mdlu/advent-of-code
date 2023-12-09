@@ -377,4 +377,23 @@ def day8():
     # return count  # for part 1
     return math.lcm(*list(periods.values()))
 
-print(day8())
+
+def day9():
+    f = open('aoc9.txt', 'r').read().strip().split("\n")
+    ans = 0
+
+    def extrapolate(vals):
+        if all(v == 0 for v in vals):
+            return 0
+        else:
+            diffs = [vals[i+1] - vals[i] for i in range(len(vals)-1)]
+            lastval = extrapolate(diffs)
+            # return vals[-1] + lastval  # part 1
+            return vals[0] - lastval  # part 2
+
+    for row in f:
+        ans += extrapolate([int(i) for i in row.split()])
+
+    return ans
+
+print(day9())
