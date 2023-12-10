@@ -396,4 +396,78 @@ def day9():
 
     return ans
 
-print(day9())
+
+def day10():
+    f = open('aoc10.txt', 'r').read().strip().split("\n")
+
+    grid = []
+    adj = []
+
+    start = None
+    for i in range(len(f)):
+        row = f[i]
+        grid.append([i for i in row])
+        poss = []
+        for j in range(len(row)):
+            north = (i-1, j)
+            south = (i+1, j)
+            east = (i, j+1)
+            west = (i, j-1)
+            val = row[j]
+            if val == 'S':
+                start = (i, j)
+                pos = []
+
+            elif val == '|':
+                pos = [north, south]
+            elif val == '-':
+                pos = [east, west]
+            elif val == 'L':
+                pos = [north, east]
+            elif val == 'J':
+                pos = [north, west]
+            elif val == '7':
+                pos = [south, west]
+            elif val == 'F':
+                pos = [south, east]
+            else: # val == '.':
+                pos = []
+            poss.append(pos)
+        adj.append(poss)
+    
+    nbrs = []
+    for i in range(len(adj)):
+        for j in range(len(adj[0])):
+            if start in adj[i][j]:
+                nbrs.append((i,j))
+    
+    nbr1 = nbrs[0]  # pick one at random, to traverse the loop in that direction
+    current = nbr1
+    path = []
+    path_set = set()
+    adj[nbr1[0]][nbr1[1]].remove(start)
+    while current != start:
+        path.append(current)
+        path_set.add(current)
+        for val in adj[current[0]][current[1]]:
+            if val not in path_set:  # find the neighbor that hasn't already been visited
+                current = val
+    # return (len(path)+1)/2  # for part 1
+
+    def shoelace_theorem(path):  # computes the area of a polygon given its lattice point coordinates
+        area = 0
+        fullpath = [path[-1]] + path
+        for i in range(len(fullpath)-1):
+            one = fullpath[i]
+            two = fullpath[i+1]
+            area += (0.5*(one[0]+two[0])*(one[1]-two[1]))
+        return abs(area)
+        
+    def picks_theorem(area, path):  # computes the number of interior lattice points of a polygon given its area and the number of boundary lattice points (equal to len(path)/2 here) 
+        return area + 1 - (len(path)/2)
+
+    area = shoelace_theorem(path)
+    interior_points = picks_theorem(area, path)
+    return interior_points
+
+print(day10())
