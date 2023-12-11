@@ -462,7 +462,7 @@ def day10():
             two = fullpath[i+1]
             area += (0.5*(one[0]+two[0])*(one[1]-two[1]))
         return abs(area)
-        
+
     def picks_theorem(area, path):  # computes the number of interior lattice points of a polygon given its area and the number of boundary lattice points (equal to len(path)/2 here) 
         return area + 1 - (len(path)/2)
 
@@ -470,4 +470,46 @@ def day10():
     interior_points = picks_theorem(area, path)
     return interior_points
 
-print(day10())
+
+def day11():
+    f = open('aoc11.txt', 'r').read().strip().split("\n")
+    ans = 0
+    
+    expandrows = []
+    for i in range(len(f)):
+        row = f[i]
+        if all(x == "." for x in row):
+            expandrows.append(i)
+    
+    expandcols = []
+    for j in range(len(f[0])):
+        if all(row[j] == "." for row in f):
+            expandcols.append(j)
+    
+    locations = []
+    for row in range(len(f)):
+        for col in range(len(f[0])):
+            val = f[row][col]
+            if val != ".":
+                locations.append((row, col))
+    
+    def dist(pos1, pos2):
+        extrarows = 0
+        for row in expandrows:
+            if min(pos1[0], pos2[0]) < row < max(pos1[0], pos2[0]):
+                extrarows += 1
+        extracols = 0
+        for col in expandcols:
+            if min(pos1[1], pos2[1]) < col < max(pos1[1], pos2[1]):
+                extracols += 1
+        
+        # return abs(pos2[0]-pos1[0]) + abs(pos2[1]-pos1[1]) + (extrarows+extracols)  # part 1
+        return abs(pos2[0]-pos1[0]) + abs(pos2[1]-pos1[1]) + (1000000-1)*(extrarows+extracols)  # part 2
+
+    for pos1 in locations:
+        for pos2 in locations:
+            ans += dist(pos1, pos2)
+
+    return int(ans/2)
+
+print(day11())
