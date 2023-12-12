@@ -1,5 +1,6 @@
 import math
 from collections import defaultdict
+from functools import cache
 
 def daytemp():
     f = open('input.txt', 'r').read().strip().split("\n")
@@ -516,12 +517,9 @@ def day11():
 def day12():
     f = open('aoc12.txt', 'r').read().strip().split("\n")
     ans = 0
-    m = {}  # memoization
 
+    @cache
     def recurse(row, sizes):
-        if (row, tuple(sizes)) in m:
-            return m[(row, tuple(sizes))]
-
         currentsize = 0
         allsizes = []  # sizes of groups we've seen thus far
         lastdotindex = 0
@@ -531,8 +529,7 @@ def day12():
                 if currentsize != 0:
                     allsizes.append(currentsize)
                     # exit early if the sizes so far do not match
-                    if allsizes != sizes[:len(allsizes)]:
-                        m[(row, tuple(sizes))] = 0  # memoize!
+                    if tuple(allsizes) != sizes[:len(allsizes)]:
                         return 0
                     currentsize = 0
 
@@ -541,25 +538,21 @@ def day12():
                 currentsize += 1
             elif row[i] == "?":
                 # try either "#" or "." for every instance of "?"
-                answer = recurse(row[lastdotindex:i] + "#" + row[i+1:], sizes[len(allsizes):]) + recurse(row[lastdotindex:i] + "." + row[i+1:], sizes[len(allsizes):])
-                m[(row, tuple(sizes))] = answer  # memoize!
-                return answer
+                return recurse(row[lastdotindex:i] + "#" + row[i+1:], sizes[len(allsizes):]) + recurse(row[lastdotindex:i] + "." + row[i+1:], sizes[len(allsizes):])
         
         # if we reach here, there are no "?" marks in the row, so we can check if all sizes seen so far match the list of sizes given
         if currentsize != 0:  # edge case, if the last group is at the edge
             allsizes.append(currentsize)
 
         # we have 1 successful solution if all sizes match, otherwise we have 0
-        result = 1 if allsizes == sizes else 0  
-        m[(row, tuple(sizes))] = result  # memoize!
-        return result
+        return 1 if tuple(allsizes) == sizes else 0  
 
     for i in range(len(f)):
         rowsplit = f[i].split()
         rowvals = rowsplit[0]
         rowvals = rowvals + "?" + rowvals + "?" + rowvals + "?" + rowvals + "?" + rowvals  # for part 2
-        # sizes = [int(i) for i in rowsplit[1].split(",")]  # for part 1
-        sizes = [int(i) for i in rowsplit[1].split(",")] * 5  # for part 2
+        # sizes = tuple(int(i) for i in rowsplit[1].split(","))  # for part 1
+        sizes = tuple(int(i) for i in rowsplit[1].split(",")) * 5  # for part 2
         ans += recurse(rowvals, sizes)
     
     return ans
