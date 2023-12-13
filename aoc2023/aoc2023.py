@@ -557,4 +557,74 @@ def day12():
     
     return ans
 
-print(day12())
+
+def day13():
+    f = open('aoc13.txt', 'r').read().strip().split("\n\n")
+    ans = 0
+
+    def transpose(grid):
+        rows = []
+        for i in range(len(grid[0])):
+            newrow = [row[i] for row in grid]
+            rows.append(''.join(newrow))
+        return rows
+    
+    def subfind(grid, original_val=None):
+        for i in range(1, len(grid)//2+1):
+            firstrows = grid[:i]
+            lastrows = grid[i:2*i][::-1]
+            if firstrows == lastrows:
+                if i != original_val:
+                    return i
+
+            firstrows = grid[-2*i:-1*i]
+            lastrows = grid[-1*i:][::-1]
+            if firstrows == lastrows:
+                if len(grid)-i != original_val:
+                    return len(grid) - i
+
+    def find(grid, original=None):
+        original_row = None
+        original_col = None
+        if original:
+            (direction, length) = original
+            original_row = length if direction == "h" else None
+            original_col = length if direction == "v" else None
+
+        row_find = subfind(grid, original_row)
+        if row_find:
+            return ("h", row_find)
+        
+        newgrid = transpose(grid)
+        col_find = subfind(newgrid, original_col)
+        if col_find:
+            return ("v", col_find)
+
+        return None
+    
+    def bruteforce(grid):
+        original = find(grid)
+        for i in range(len(grid)):
+            row = grid[i]
+            for j in range(len(grid[0])):
+                if grid[i][j] == "#":
+                    grid[i] = grid[i][:j] + "." + grid[i][j+1:]
+                else:
+                    grid[i] = grid[i][:j] + "#" + grid[i][j+1:]
+                tryans = find(grid, original)
+                if tryans and tryans != original:
+                    return tryans
+                grid[i] = row
+
+    for i in range(len(f)):
+        grid = f[i].split("\n")
+        # direction, length = find(grid)  # part 1
+        direction, length = bruteforce(grid)  # part 2
+        if direction == "h":
+            ans += (100*length)
+        else:
+            ans += length
+        
+    return ans
+
+print(day13())
