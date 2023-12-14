@@ -627,4 +627,76 @@ def day13():
         
     return ans
 
-print(day13())
+
+def day14():
+    f = open('aoc14.txt', 'r').read().strip().split("\n")
+    ans = 0
+    m = {}
+    grid = []
+    for row in f:
+        grid.append(list(row))
+    
+    # part 1
+    # for _ in range(len(grid)):
+    #     for i in range(1, len(grid)):
+    #         for j in range(len(grid[0])):
+    #             if grid[i][j] == "O" and grid[i-1][j] == '.':
+    #                 grid[i][j] = '.'
+    #                 grid[i-1][j] = "O"
+    # for i in range(len(grid)):
+    #     ans += grid[i].count("O")*(len(grid)-i)
+    # return ans
+
+    allgrids = set()
+    cycle = 1
+    while True:
+        # north
+        for _ in range(len(grid)):
+            for i in range(1, len(grid)):
+                for j in range(len(grid[0])):
+                    if grid[i][j] == "O" and grid[i-1][j] == '.':
+                        grid[i][j] = '.'
+                        grid[i-1][j] = "O"
+        
+        # west
+        for _ in range(len(grid)):
+            for i in range(len(grid)):
+                for j in range(1,len(grid[0])):
+                    if grid[i][j] == "O" and grid[i][j-1] == '.':
+                        grid[i][j] = '.'
+                        grid[i][j-1] = "O"
+
+        # south
+        for _ in range(len(grid)):
+            for i in range(len(grid)-1):
+                for j in range(len(grid[0])):
+                    if grid[i][j] == "O" and grid[i+1][j] == '.':
+                        grid[i][j] = '.'
+                        grid[i+1][j] = "O"
+
+        # east
+        for _ in range(len(grid)):
+            for i in range(len(grid)):
+                for j in range(len(grid[0])-1):
+                    if grid[i][j] == "O" and grid[i][j+1] == '.':
+                        grid[i][j] = '.'
+                        grid[i][j+1] = "O"
+        
+        strgrid = ''.join([''.join(row) for row in grid])
+        # use this to compute the period; on this particular input, cycles 83 and 155 are the same, so the period is 155-83 = 72
+        # if strgrid in allgrids:
+        #     print(m[strgrid])
+        #     print(cycle)
+        #     return
+        m[strgrid] = cycle
+        allgrids.add(strgrid)
+
+        # now, take (1000000000-83) mod 72, which is 53; we now want the grid at cycle 83+53
+        if cycle == 83+53:
+            for i in range(len(grid)):
+                ans += grid[i].count("O")*(len(grid)-i)
+            return ans
+
+        cycle += 1
+
+print(day14())
