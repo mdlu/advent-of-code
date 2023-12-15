@@ -699,4 +699,56 @@ def day14():
 
         cycle += 1
 
-print(day14())
+
+def day15():
+    f = open('aoc15.txt', 'r').read().strip().split(",")
+    ans = 0
+    m = {}
+    for word in f:
+        # comment out this block for part 1
+        if word[-1] == "-":
+            word = word[:-1]
+        else:
+            word = word.split("=")[0]
+    
+        current = 0
+        for c in word:
+            current += ord(c)
+            current *= 17
+            current %= 256
+        m[word] = current
+
+        # ans += current  # part 1
+    # return ans  # part 1
+
+    boxes = {i: [] for i in range(256)}
+    for word in f:
+        if word[-1] == "-":
+            prefix = word[:-1]
+            boxindex = m[prefix]
+            if prefix in [b[0] for b in boxes[boxindex]]:
+                for b in boxes[boxindex]:
+                    if b[0] == prefix:
+                        boxes[boxindex].remove(b)
+                        break
+        else:
+            prefix, focallength = word.split("=")
+            boxindex = m[prefix]
+            focallength = int(focallength)
+            if prefix in [b[0] for b in boxes[boxindex]]:
+                for i in range(len(boxes[boxindex])):
+                    b = boxes[boxindex][i]
+                    if b[0] == prefix:
+                        boxes[boxindex][i] = (prefix, focallength)
+                        break
+            else:
+                boxes[boxindex].append((prefix, focallength))
+
+    for boxnumber in boxes:
+        for slot in range(len(boxes[boxnumber])):
+            lens = boxes[boxnumber][slot]
+            ans += (boxnumber+1)*(slot+1)*lens[1]
+        
+    return ans
+
+print(day15())
