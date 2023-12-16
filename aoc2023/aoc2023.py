@@ -751,4 +751,80 @@ def day15():
         
     return ans
 
-print(day15())
+
+def day16():
+    grid = open('aoc16.txt', 'r').read().strip().split("\n")
+    
+    EAST = (0,1)
+    WEST = (0,-1)
+    NORTH = (-1,0)
+    SOUTH = (1,0)
+    
+    mapping = {
+        ".": {EAST: [EAST], WEST: [WEST], NORTH: [NORTH], SOUTH: [SOUTH]},
+        "-": {EAST: [EAST], WEST: [WEST], NORTH: [WEST, EAST], SOUTH: [WEST, EAST]},
+        "|": {NORTH: [NORTH], SOUTH: [SOUTH], WEST: [NORTH, SOUTH], EAST: [NORTH, SOUTH]},
+        "/": {NORTH: [EAST], SOUTH: [WEST], EAST: [NORTH], WEST: [SOUTH]},
+        "\\": {NORTH: [WEST], SOUTH: [EAST], EAST: [SOUTH], WEST: [NORTH]},
+    }
+
+    def is_in(pos):
+        row, col = pos
+        return 0<=row<len(grid) and 0<=col<len(grid[0])
+    
+    def try_start(start):
+        # tuples are (position, direction)
+        # position is (row, col), direction is (row_direction, col_direction)
+        litpos = {start}
+        lit = set()
+
+        def go(pos, dir):
+            nextpos = (pos[0]+dir[0], pos[1]+dir[1])
+            if is_in(nextpos):
+                litpos.add((nextpos, dir))
+        
+        while litpos:
+            postuple = litpos.pop()
+            if postuple in lit:
+                continue
+            lit.add(postuple)
+
+            pos, dir = postuple
+            val = grid[pos[0]][pos[1]]
+            m = mapping[val]
+            for nextdir in m[dir]:
+                go(pos, nextdir)
+
+        return len(set([l[0] for l in lit]))
+
+    # return try_start(((0,0),EAST))  # part 1
+
+    maxlit = 0
+    row = 0    
+    for col in range(len(grid[0])):  # top edge
+        dir = SOUTH
+        lit = try_start(((row, col), dir))
+        if lit > maxlit:
+            maxlit = lit
+    row = len(grid)-1
+    for col in range(len(grid[0])):  # bottom edge
+        dir = NORTH
+        lit = try_start(((row, col), dir))
+        if lit > maxlit:
+            maxlit = lit
+    col = 0
+    for row in range(len(grid)):  # left edge
+        dir = EAST
+        lit = try_start(((row, col), dir))
+        if lit > maxlit:
+            maxlit = lit
+    col = len(grid[0])-1
+    for row in range(len(grid)):  # right edge
+        dir = WEST
+        lit = try_start(((row, col), dir))
+        if lit > maxlit:
+            maxlit = lit
+
+    return maxlit
+
+print(day16())
