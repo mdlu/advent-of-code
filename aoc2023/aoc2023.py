@@ -1,3 +1,4 @@
+import heapq
 import math
 from collections import defaultdict
 from functools import cache
@@ -827,4 +828,57 @@ def day16():
 
     return maxlit
 
-print(day16())
+
+def day17():
+    f = open('aoc17.txt', 'r').read().strip().split("\n")
+    grid = []
+    for row in f:
+        rowints = [int(j) for j in list(row)]
+        grid.append(rowints)
+
+    EAST = (0,1)
+    WEST = (0,-1)
+    NORTH = (-1,0)
+    SOUTH = (1,0)
+    all_dirs = [NORTH, EAST, SOUTH, WEST]
+    opp = {NORTH: SOUTH, SOUTH: NORTH, EAST: WEST, WEST: EAST}
+
+    def is_in(pos):
+        row, col = pos
+        return 0<=row<len(grid) and 0<=col<len(grid[0])
+
+    dists = {(row, col): float("inf") for row in range(len(grid)) for col in range(len(grid[0]))}
+    def dijkstra():
+        done = set()
+        queue = [(0, (0,0), 0, (0,0))]
+        heapq.heapify(queue)
+
+        while queue:
+            n = heapq.heappop(queue)
+            dist, pos, streak, dir = n
+            if (pos, streak, dir) in done:
+                continue
+            # dists[pos] = min(dists[pos], dist)  # part 1 only
+            if streak >= 4:  # part 2 only
+                dists[pos] = min(dists[pos], dist)  # part 2 only
+            done.add((pos, streak, dir))
+            row, col = pos
+
+            # forbidden = dir if streak == 3 else None  # part 1
+            forbidden = dir if streak == 10 else None  # part 2
+
+            validdirs = [i for i in all_dirs if i != forbidden and (streak == 0 or opp[dir] != i)]
+            if 1 <= streak <= 3:  # part 2
+                validdirs = [dir]  # part 2
+            for newdir in validdirs:
+                newrow, newcol = row+newdir[0], col+newdir[1]
+                newpos = (newrow, newcol)
+                if is_in(newpos):
+                    val = grid[newrow][newcol]
+                    newstreak = 1 if newdir != dir else streak+1
+                    heapq.heappush(queue, (dist+val, newpos, newstreak, newdir))
+
+    dijkstra()
+    return dists[(len(grid)-1,len(grid[0])-1)]
+
+print(day17())
