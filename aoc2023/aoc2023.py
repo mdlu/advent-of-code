@@ -465,7 +465,7 @@ def day10():
             area += (0.5*(one[0]+two[0])*(one[1]-two[1]))
         return abs(area)
 
-    def picks_theorem(area, path):  # computes the number of interior lattice points of a polygon given its area and the number of boundary lattice points (equal to len(path)/2 here) 
+    def picks_theorem(area, path):  # computes the number of interior lattice points of a polygon given its area and the number of boundary lattice points (equal to len(path) here) 
         return area + 1 - (len(path)/2)
 
     area = shoelace_theorem(path)
@@ -881,4 +881,45 @@ def day17():
     dijkstra()
     return dists[(len(grid)-1,len(grid[0])-1)]
 
-print(day17())
+
+def day18():
+    f = open('aoc18.txt', 'r').read().strip().split("\n")
+    m = {"R": (0,1), "L": (0,-1), "U": (-1,0), "D": (1,0)}
+    path = []
+    pos = (0,0)
+
+    d = {"0": "R", "1": "D", "2": "L", "3": "U"}
+    pathlen = 0
+
+    for i in range(len(f)):
+        row = f[i].split()
+        # dir = row[0]  # part 1
+        # dist = int(row[1])  # part 1
+        
+        hex = row[2][2:-1]  # part 2
+        dist = int(hex[:5], 16)  # part 2
+        dir = d[hex[-1]]  # part 2
+
+        move = (m[dir][0]*dist, m[dir][1]*dist)
+        pathlen += dist
+        pos = (pos[0] + move[0], pos[1] + move[1])
+        path.append(pos)
+    
+    def shoelace_theorem(path):  # computes the area of a polygon given its lattice point coordinates
+        area = 0
+        fullpath = [path[-1]] + path
+        for i in range(len(fullpath)-1):
+            one = fullpath[i]
+            two = fullpath[i+1]
+            area += (0.5*(one[0]+two[0])*(one[1]-two[1]))
+        return abs(area)
+
+    def picks_theorem(area, boundary_pts):  # computes the number of interior lattice points of a polygon given its area and the number of boundary lattice points 
+        return area + 1 - (boundary_pts)/2
+
+    area = shoelace_theorem(path)
+    interior_points = picks_theorem(area, pathlen)
+    return interior_points + pathlen
+
+        
+print(day18())
