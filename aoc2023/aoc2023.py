@@ -1,7 +1,7 @@
 import heapq
 import math
 from collections import defaultdict
-from functools import cache
+from functools import cache, reduce
 
 def daytemp():
     f = open('input.txt', 'r').read().strip().split("\n")
@@ -921,5 +921,85 @@ def day18():
     interior_points = picks_theorem(area, pathlen)
     return interior_points + pathlen
 
+
+def day19():
+    f = open('aoc19.txt', 'r').read().strip().split("\n\n")
+    ans = 0
+    m = {}
+    
+    workflows = f[0].strip().split("\n")
+    parts = f[1].strip().split("\n")
+
+    for w in workflows:
+        wsplit = w[:-1].split("{")
+        wname = wsplit[0]
+        options = wsplit[1].split(",")
+        m[wname] = options
+    
+    def traverse(part, pos):
+        if pos in {"A", "R"}:
+            return pos
+        # part has keys {x:, m:, a:, s:}
+        options = m[pos]
+        for o in options[:-1]:
+            condition, result = o.split(":")
+            attribute = condition[0]
+            sign = condition[1]
+            num = int(condition[2:])
+            attributevalue = part[attribute]
+            if sign == "<" and attributevalue < num:
+                return traverse(part, result)
+            elif sign == ">" and attributevalue > num:
+                return traverse(part, result)
+        return traverse(part, options[-1])
+    
+    # Part 1
+    # for part in parts:
+    #     vals = part[1:-1].split(",")
+    #     partmap = {}
+    #     for v in vals:  # construct mapping of "x", "m", "a", "s" to values
+    #         partmap[v[0]] = int(v[2:])
+    #     r = traverse(partmap, "in")
+    #     if r == "A":
+    #         ans += sum(partmap.values())
+    # return ans
+    
+    # these are open intervals for each attribute
+    possible = {"x": (0, 4001), "m": (0, 4001), "a": (0, 4001), "s": (0, 4001)}
+    def traverse2(pos, possiblemap):
+        total = 0
+        options = m[pos]
+
+        for o in options[:-1]:
+            condition, result = o.split(":")
+            attribute = condition[0]
+            sign = condition[1]
+            num = int(condition[2:])
+            minval, maxval = possiblemap[attribute]
+            if sign == "<":
+                newrange = (min(num, minval), min(num, maxval))
+                comp = (max(num-1, minval), max(num-1, maxval))  # tricky off-by-1, since the complement is >=
+            elif sign == ">":
+                newrange = (max(num, minval), max(num, maxval))
+                comp = (min(num+1, minval), min(num+1, maxval))  # tricky off-by-1, since the complement is <=
+            
+            if newrange[0] != newrange[1]:
+                possiblemap[attribute] = newrange
+                if result == "A":
+                    total += reduce(lambda x, y: x*y, ((x[1]-x[0]-1) for x in possiblemap.values()))
+                elif result != "R":  # if result == "R", we ignore it
+                    total += traverse2(result, possiblemap.copy())
+            
+            possiblemap[attribute] = comp  # move to the next condition, so change this attribute to the complement
         
-print(day18())
+        last = options[-1]
+        if last == "A":
+            total += reduce(lambda x, y: x*y, [max(0, x[1]-x[0]-1) for x in possiblemap.values()])
+        elif last != "R":
+            total += traverse2(last, possiblemap.copy())
+        
+        return total
+
+    return traverse2("in", possible)
+        
+print(day19())
