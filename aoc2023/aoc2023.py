@@ -1001,5 +1001,89 @@ def day19():
         return total
 
     return traverse2("in", possible)
+
+
+def day20():
+    f = open('aoc20.txt', 'r').read().strip().split("\n")
+    ans = 0
+    m = {}
+    source_to_dest = defaultdict(list)
+    modtype = defaultdict(str)
+    for row in f:
+        left, right = row.split(" -> ")
+        rights = right.split(", ")
+        if left == "broadcaster":
+            name = left
+        else:
+            symbol = left[0]
+            name = left[1:]
+            modtype[name] = symbol
+            if symbol == "%":
+                m[name] = 0
+            else:
+                m[name] = {}
+        source_to_dest[name] = rights
+
+    for row in f:
+        left, right = row.split(" -> ")
+        rights = right.split(", ")
+        if left == "broadcaster":
+            name = left
+        else:
+            name = left[1:]
+        for r in rights:
+            if r in m and not isinstance(m[r], int):
+                m[r][name] = 0
+
+    pulse_counts = {0: 0, 1: 0}
+    def receive_pulse(source, destination, value):
+        if modtype[destination] == "%":
+            if value == 1:
+                return []
+            else:
+                m[destination] = int(not (m[destination]))
+                sendvalue = m[destination]
+        elif modtype[destination] == "&":
+            m[destination][source] = value
+            sendvalue = int(not all(v == 1 for v in m[destination].values()))
+        else:
+            return []
+        pulse_counts[sendvalue] += len(source_to_dest[destination])
+        return [(destination, nextdest, sendvalue) for nextdest in source_to_dest[destination]]
+
+    '''
+    it gets fuzzy here... we scan the input by hand and discover that the incoming node to &rx is only &cs
+    and then the only incoming nodes to &cs are &kh, &lz, &tg, &hn
+    and each of these only depends on % nodes, so we try to find the period for kh, lz, tg, hn and take the lcm
+    '''
+    nodes_to_rx = ["kh", "lz", "tg", "hn"]
+    tracking = defaultdict(list)
+    count = 0
+    while True:
+        count += 1
+        pulse_counts[0] += len(source_to_dest["broadcaster"]) + 1  # low pulses sent from broadcaster, plus one low pulse from the first button
+        queue = [("destination", dest, 0) for dest in source_to_dest["broadcaster"]]
+        while queue:
+            nextqueue = []
+            for q in queue:
+                if q[0] in nodes_to_rx and q[2] == 1:
+                    tracking[q[0]].append(count)
+                next_pulses = receive_pulse(q[0], q[1], q[2])
+                nextqueue.extend(next_pulses)
+            queue = nextqueue
         
-print(day19())
+        # part 1
+        # if count == 1000: 
+        #     break
+        
+        # part 2
+        if count == 20000:  
+            # empirically, we observe that all periods luckily are independent from one another!
+            print(tracking)  
+            break
+
+    # return pulse_counts[0] * pulse_counts[1]  # part 1
+    periods = [tracking[key][0] for key in nodes_to_rx]
+    return math.lcm(*periods)
+        
+print(day20())
