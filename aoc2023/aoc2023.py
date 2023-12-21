@@ -1192,6 +1192,10 @@ def day21():
     # grids on the edge of the diamond that can only be reached by entering from one of its corners
     from_corner = (a["northwest"] + a["northeast"] + a["southwest"] + a["southeast"]) * RADIUS
 
+    # a quick note... so this summation ends up being quadratic in RADIUS, since all values in the dictionary named "a" are constants...
+    # so it seems like some people just calculated what this would be for R = 0, 1, and 2, and solved for the coefficients...
+    # then plugged R = 202300 into the quadratic... very clever
     return opposite_parity + same_parity + ends + two_directions + from_corner
 
+    
 print(day21())
