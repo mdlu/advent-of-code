@@ -1085,5 +1085,113 @@ def day20():
     # return pulse_counts[0] * pulse_counts[1]  # part 1
     periods = [tracking[key][0] for key in nodes_to_rx]
     return math.lcm(*periods)
-        
-print(day20())
+
+
+def day21():
+    grid = open('aoc21.txt', 'r').read().strip().split("\n")
+    for i in range(len(grid)):
+        row = grid[i]
+        for j in range(len(row)):
+            if row[j] == "S":
+                start = (i, j)
+    
+    def nbrs(pos):
+        row, col = pos
+        ns = set()
+        moves = [(1,0), (-1,0), (0,1), (0,-1)]
+        for m in moves:
+            newrow, newcol = row+m[0], col+m[1]
+            if 0 <= newrow < len(grid) and 0 <= newcol < len(grid[0]) and grid[newrow][newcol] != "#":
+                ns.add((newrow, newcol))
+        return ns
+
+    def take_steps(start_loc, num_steps):
+        visited = set()
+        even_steps = {start_loc}
+        odd_steps = set()
+
+        locs = {start_loc}
+        for i in range(num_steps):
+            newset = set()
+            for l in locs:
+                newset |= nbrs(l)
+            locs = {n for n in newset if n not in visited}
+            visited |= locs
+            if i%2 == 0:
+                odd_steps |= locs
+            else:
+                even_steps |= locs
+            if not locs:  # early return
+                break
+        return odd_steps, even_steps
+
+    # part 1
+    # _, even_steps = take_steps(start, 64)
+    # return len(even_steps) 
+
+    '''
+    so for part 2... the given grid is 131x131, and when we inspect the input, we notice that all borders,
+    and all locations in the same row/column as 'S' are all garden plots, so we can go from the same "position" in adjacent grids
+    always in exactly 131 steps; this is convenient because the given number of steps, 26501365, is 202300*(131)+65
+    this was by design, because it takes 65 steps to reach the midpoints of each edge in the starting 131x131 "grid"
+    so now we need to break up the "infinite" grid and think about all of the possible individual "grids" that are reachable
+    things are simplified a bit here because of parity -- no spot reachable in an odd number of steps can ever be reached in an even number of steps
+    '''
+    # len(grid) = 131
+    SIZE = len(grid)-1
+    RADIUS = 26501365 // len(grid)  # 202300
+    dirsets = {}
+
+    NORTH = (0, SIZE//2)  # midpoint of top edge
+    SOUTH = (SIZE, SIZE//2)  # midpoint of bottom edge
+    WEST = (SIZE//2, 0)  # midpoint of left edge
+    EAST = (SIZE//2, SIZE)  # midpoint of right edge
+
+    # starting from each of these midpoints on a grid, how many locations in an individual grid can be reached?
+    for dir in [NORTH, SOUTH, WEST, EAST]:
+        odd_steps, even_steps = take_steps(dir, SIZE)
+        dirsets[dir] = even_steps  # since SIZE is even
+    
+    # these are all corners; starting from these corners, how many locations in an individual grid can be reached?
+    NORTHEAST = (0, SIZE)
+    NORTHWEST = (0, 0)
+    SOUTHEAST = (SIZE, SIZE)
+    SOUTHWEST = (SIZE, 0)
+    for dir in [NORTHEAST, NORTHWEST, SOUTHEAST, SOUTHWEST]:
+        # when you draw it out, for the outermost grids that we enter from a corner, when you enter it, you only have 64 steps remaining, because it took 67 steps to reach it from an edge midpoint
+        odd_steps, even_steps = take_steps(dir, SIZE//2-1)
+        dirsets[dir] = even_steps  # since SIZE//2-1 is even
+    
+    # changing the keys to be more readable
+    namemap = {NORTH: "north", SOUTH: "south", EAST: "east", WEST: "west", NORTHWEST: "northwest", NORTHEAST: "northeast", SOUTHWEST: "southwest", SOUTHEAST: "southeast"}
+    a = {}
+    for dir in [NORTH, SOUTH, WEST, EAST, NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST]:
+        a[namemap[dir]] = len(dirsets[dir])
+    a["north and west"] = len(dirsets[NORTH] | dirsets[WEST])
+    a["south and west"] = len(dirsets[SOUTH] | dirsets[WEST])
+    a["north and east"] = len(dirsets[NORTH] | dirsets[EAST])
+    a["south and east"] = len(dirsets[SOUTH] | dirsets[EAST])
+    
+    CENTER = (SIZE//2, SIZE//2)
+    odd_steps, even_steps = take_steps(dir, 10000)  # pick a large enough number of iterations, the function will early return
+    a["even"] = len(even_steps)  # all locations with the same parity as the starting location, i.e. all locations reachable in an even number of moves from S
+    a["odd"] = len(odd_steps)  # all locations with the opposite parity as the starting location, i.e. all locations reachable in an odd number of moves from S
+
+    print(a)
+    
+    # this summation is almost impossible to explain without a proper diagram...
+
+    # first term: grids with the opposite parity of the center grid
+    opposite_parity = RADIUS**2*a["even"]
+    # grids with the same parity as the center grid
+    same_parity = (RADIUS-1)**2*a["odd"] \
+    # grids at the very "tips" of the "diamond" of all reachable grids, i.e. if you only go in one direction the whole time 
+    ends = (a["north"] + a["south"] + a["east"] + a["west"])
+    # grids on the edge of the "diamond" that are reachable from two directions
+    two_directions = (a["north and east"] + a["north and west"] + a["south and east"] + a["south and west"]) * (RADIUS-1)
+    # grids on the edge of the diamond that can only be reached by entering from one of its corners
+    from_corner = (a["northwest"] + a["northeast"] + a["southwest"] + a["southeast"]) * RADIUS
+
+    return opposite_parity + same_parity + ends + two_directions + from_corner
+
+print(day21())
