@@ -1197,5 +1197,100 @@ def day21():
     # then plugged R = 202300 into the quadratic... very clever
     return opposite_parity + same_parity + ends + two_directions + from_corner
 
+
+def day22():
+    f = open('aoc22.txt', 'r').read().strip().split("\n")
+    ans = 0
+
+    all_blocks = []
+    for i in range(len(f)):
+        row = f[i]
+        left, right = row.split("~")
+        ltuple = tuple(int(i) for i in left.split(","))
+        rtuple = tuple(int(i) for i in right.split(","))
+        all_blocks.append((ltuple, rtuple))
+    all_blocks.sort(key=lambda x: x[0][2])  # sort by z coordinate
+
+    def xy_block_coords(block, pos):
+        left, right = block
+        if pos == "top":
+            zcoord = left[2]  # if a "top" block, give all the bottom-most xy coordinates
+        elif pos == "bottom":
+            zcoord = right[2]  # if a "bottom" block, give all the top-most xy coordinates
+        return [(i,j,zcoord) for i in range(left[0], right[0]+1) for j in range(left[1], right[1]+1)]
+
+    def is_atop(top, bottom):
+        lefttop, righttop = top
+        top_xy = xy_block_coords(top, "top")
+        bottom_xy = xy_block_coords(bottom, "bottom")
+        for top_coord in top_xy:
+            tx, ty, tz = top_coord
+            for bottom_coord in bottom_xy:
+                bx, by, bz = bottom_coord
+                if bz < tz and bx == tx and by == ty:
+                    move = tz-bz-1
+                    movedblock = ((lefttop[0], lefttop[1], lefttop[2]-move), (righttop[0], righttop[1], righttop[2]-move))
+                    return movedblock
+        return None
     
-print(day21())
+    stack = []
+    for block in all_blocks:
+        appended = False
+        finalmovedblock = None
+        for stackblockindex in range(len(stack)):
+            stackblock = stack[stackblockindex]
+            movedblock = is_atop(block, stackblock)
+            if movedblock is not None:
+                # need to find the block that this block stacks the "highest" on top of
+                if finalmovedblock is None or movedblock[0][2] > finalmovedblock[0][2]: 
+                    finalmovedblock = movedblock
+        if finalmovedblock:
+            stack.append(finalmovedblock)
+        else:  # no other block lies below it, so we need to put the block on the ground
+            lefttop, righttop = block 
+            move = lefttop[2]-1
+            finalmovedblock = ((lefttop[0], lefttop[1], lefttop[2]-move), (righttop[0], righttop[1], righttop[2]-move))
+            stack.append(finalmovedblock)
+    
+    def directly_atop(top, bottom):
+        lefttop, righttop = top
+        top_xy = xy_block_coords(top, "top")
+        bottom_xy = xy_block_coords(bottom, "bottom")
+        for top_coord in top_xy:
+            tx, ty, tz = top_coord
+            for bottom_coord in bottom_xy:
+                bx, by, bz = bottom_coord
+                if bz == (tz-1) and bx == tx and by == ty:  # z-coordinates differ by exactly 1
+                    return True
+        return False
+
+    lies_below = defaultdict(list)
+    lies_atop = defaultdict(list)
+    for top in stack:
+        for bottom in stack:
+            if directly_atop(top, bottom):
+                lies_atop[top].append(bottom)
+                lies_below[bottom].append(top)
+    
+    # part 1
+    # not_allowed = set()
+    # for block in stack:
+    #     if len(lies_atop[block]) == 1:
+    #         not_allowed.add(lies_atop[block][0])
+    # return len(stack) - len(not_allowed)
+    
+    for block in stack:
+        removed = set()
+        nextremove = set([block])
+        while nextremove:
+            nextnextremove = set()
+            for n in nextremove:
+                removed.add(n)
+                for b in lies_below[n]:
+                    if all(x in removed for x in lies_atop[b]):
+                        nextnextremove.add(b)
+            nextremove = nextnextremove
+        ans += len(removed)-1  # -1 to ignore the disintegrated block
+    return ans
+    
+print(day22())
