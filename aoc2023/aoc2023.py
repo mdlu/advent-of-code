@@ -2,6 +2,7 @@ import heapq
 import math
 from collections import defaultdict
 from functools import cache, reduce
+from tkinter import N
 
 def daytemp():
     f = open('input.txt', 'r').read().strip().split("\n")
@@ -1292,5 +1293,97 @@ def day22():
             nextremove = nextnextremove
         ans += len(removed)-1  # -1 to ignore the disintegrated block
     return ans
+
+
+def day23():
+    # didn't get the chance to try to optimize this solution at all... both parts are slow
+    grid = open('aoc23.txt', 'r').read().strip().split("\n")
     
-print(day22())
+    # find these two coordinates by inspecting the input
+    start = (0,1)
+    end = (len(grid)-1, len(grid[0])-2)
+
+    def nbrs(i, j, visited):
+        dirs = [(-1,0), (0,1), (0,-1), (1,0)]
+        ns = [(i+x[0], j+x[1]) for x in dirs if 0<=(i+x[0])<len(grid) and 0<=(j+x[1])<len(grid[0])]
+        return [n for n in ns if grid[n[0]][n[1]] != "#" and n not in visited]
+
+    m = defaultdict(int)
+
+    dirmap = {">": (0,1), "<": (0,-1), "v": (1,0), "^": (-1,0)}
+    def bfs(pos, visited):
+        nextqueue = []
+        neighbors = nbrs(pos[0], pos[1], visited)
+
+        val = grid[pos[0]][pos[1]]
+        if val not in dirmap:
+            for n in neighbors:
+                if n not in visited:
+                    newvisited = visited | {n}
+                    m[n] = len(newvisited)
+                    nextqueue.append((n, newvisited))
+        else:
+            dir = dirmap[val]
+            nextpos = (pos[0]+dir[0], pos[1]+dir[1])
+            if nextpos not in visited:
+                newvisited = visited | {nextpos}
+                m[nextpos] = len(newvisited)
+                nextqueue.append((nextpos, newvisited))
+        
+        return nextqueue
+    
+    # part 1 (very slow)
+    # queue = [(start, set())]
+    # while queue:
+    #     nextqueues = []
+    #     for q in queue:
+    #         nextqueue = bfs(q[0], q[1])
+    #         nextqueues.extend(nextqueue)
+    #     queue = nextqueues
+    # return m[end]
+
+    # part 2 (extremely slow, on the order of minutes)
+    realmap = defaultdict(dict)  # maps positions to a dictionary of their neighbors and the distance between them
+    for row in range(len(grid)):
+        for col in range(len(grid[0])):
+            if grid[row][col] != "#":
+                for n in nbrs(row, col, set()):
+                    realmap[(row, col)][n] = 1
+    
+    # collapse the graph; any position with only two neighbors can be removed, followed by linking its neighbors with an edge
+    for _ in range(len(grid)*len(grid[0])):
+        keys = list(realmap.keys())
+        for key in keys:
+            if len(realmap[key]) == 2:
+                k0, k1 = list(realmap[key].keys())
+                v0 = realmap[key][k0]
+                v1 = realmap[key][k1]
+
+                del realmap[k0][key]
+                del realmap[k1][key]
+                del realmap[key]
+                realmap[k0][k1] = v0+v1
+                realmap[k1][k0] = v0+v1
+
+    def newbfs(pos, visited, dist):
+        nextqueue = []
+        for n in realmap[pos]:
+            if n not in visited:
+                newdist = realmap[pos][n]+dist
+                if m[n] < newdist:
+                    if n == end:
+                        print(newdist)  # keep track of progress
+                    m[n] = newdist
+                nextqueue.append((n, visited | {pos}, newdist))
+        return nextqueue
+
+    queue = [(start, set(), 0)]
+    while queue:
+        nextqueues = []
+        for q in queue:
+            nextqueue = newbfs(q[0], q[1], q[2])
+            nextqueues.extend(nextqueue)
+        queue = nextqueues
+    return m[end]
+
+print(day23())
