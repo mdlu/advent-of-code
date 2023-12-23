@@ -1,6 +1,6 @@
 import heapq
 import math
-from collections import defaultdict
+from collections import defaultdict, deque
 from functools import cache, reduce
 from tkinter import N
 
@@ -1311,8 +1311,9 @@ def day23():
     m = defaultdict(int)
 
     dirmap = {">": (0,1), "<": (0,-1), "v": (1,0), "^": (-1,0)}
-    def bfs(pos, visited):
-        nextqueue = []
+    queue = deque([(start, set())])
+    def bfs(q):
+        pos, visited = q
         neighbors = nbrs(pos[0], pos[1], visited)
 
         val = grid[pos[0]][pos[1]]
@@ -1321,25 +1322,19 @@ def day23():
                 if n not in visited:
                     newvisited = visited | {n}
                     m[n] = len(newvisited)
-                    nextqueue.append((n, newvisited))
+                    queue.append((n, newvisited))
         else:
             dir = dirmap[val]
-            nextpos = (pos[0]+dir[0], pos[1]+dir[1])
-            if nextpos not in visited:
-                newvisited = visited | {nextpos}
-                m[nextpos] = len(newvisited)
-                nextqueue.append((nextpos, newvisited))
-        
-        return nextqueue
+            n = (pos[0]+dir[0], pos[1]+dir[1])
+            if n not in visited:
+                newvisited = visited | {n}
+                m[n] = len(newvisited)
+                queue.append((n, newvisited))
     
     # part 1 (very slow)
-    # queue = [(start, set())]
     # while queue:
-    #     nextqueues = []
-    #     for q in queue:
-    #         nextqueue = bfs(q[0], q[1])
-    #         nextqueues.extend(nextqueue)
-    #     queue = nextqueues
+    #     q = queue.popleft()
+    #     bfs(q)
     # return m[end]
 
     # part 2 (extremely slow, on the order of minutes)
@@ -1365,8 +1360,9 @@ def day23():
                 realmap[k0][k1] = v0+v1
                 realmap[k1][k0] = v0+v1
 
-    def newbfs(pos, visited, dist):
-        nextqueue = []
+    queue = deque([(start, set(), 0)])
+    def newbfs(q):
+        pos, visited, dist = q
         for n in realmap[pos]:
             if n not in visited:
                 newdist = realmap[pos][n]+dist
@@ -1374,16 +1370,11 @@ def day23():
                     if n == end:
                         print(newdist)  # keep track of progress
                     m[n] = newdist
-                nextqueue.append((n, visited | {pos}, newdist))
-        return nextqueue
+                queue.append((n, visited | {pos}, newdist))
 
-    queue = [(start, set(), 0)]
     while queue:
-        nextqueues = []
-        for q in queue:
-            nextqueue = newbfs(q[0], q[1], q[2])
-            nextqueues.extend(nextqueue)
-        queue = nextqueues
+        q = queue.popleft()
+        newbfs(q)
     return m[end]
 
 print(day23())
