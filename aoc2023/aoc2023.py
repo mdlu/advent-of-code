@@ -2,7 +2,8 @@ import heapq
 import math
 from collections import defaultdict, deque
 from functools import cache, reduce
-from tkinter import N
+from re import X
+from tkinter import N, TRUE
 
 def daytemp():
     f = open('input.txt', 'r').read().strip().split("\n")
@@ -1377,4 +1378,79 @@ def day23():
         newbfs(q)
     return m[end]
 
-print(day23())
+
+def day24():
+    f = open('aoc24.txt', 'r').read().strip().split("\n")
+    ans = 0
+    m = {}
+    for i in range(len(f)):
+        row = f[i]
+        pos, vel = row.split(" @ ")
+        postuple = tuple([int(i) for i in pos.split(", ")])
+        veltuple = tuple([int(i) for i in vel.split(", ")])
+        m[postuple] = veltuple
+    
+    for pos0 in m:
+        for pos1 in m:
+            if pos0 != pos1:
+                # system of equations here:
+                # y-y0 = (dy0/dx0)(x-x0)
+                # y-y1 = (dy1/dx1)(x-x1)
+                # equating y, we get (dy0/dx0)(x-x0) + y0 = (dy1/dx1)(x-x1) + y1
+                dx0, dy0, _ = m[pos0]
+                dx1, dy1, _ = m[pos1]
+                x0, y0, _ = pos0
+                x1, y1, _ = pos1
+                if ((dy0/dx0)-(dy1/dx1)) == 0:  # parallel lines
+                    continue
+                # solve the system above for x and y
+                x = (y1 - y0 - x1*(dy1/dx1) + x0*(dy0/dx0))/((dy0/dx0)-(dy1/dx1))
+                y = (dy0/dx0)*(x-x0)+y0
+                # make sure that the intersection point is "forward" in time
+                is_forward = (((x-x0)>0 and dx0>0) or ((x-x0)<0 and dx0<0)) and (((x-x1)>0 and dx1>0) or ((x-x1)<0 and dx1<0))
+                if is_forward and 200000000000000 <= x <= 400000000000000 and 200000000000000 <= y <= 400000000000000:
+                    ans += 1
+
+    # part 1
+    # return ans//2
+
+    # wrote this function trying to brute-force sets of points on paths, but wasn't tractable    
+    def is_collinear(points):
+        dydx = None
+        dzdx = None
+        for i in range(len(points)-1):
+            x0, y0, z0 = points[i]
+            x1, y1, z1 = points[i+1]
+            if (x1-x0) == 0 or (y1-y0) == 0 or (z1-z0) == 0:
+                return False
+            dydx0 = (y1-y0)/(x1-x0)
+            dzdx0 = (z1-z0)/(x1-x0)
+            if dydx is None:
+                dydx = dydx0
+            elif dydx != dydx0:
+                return False
+            if dzdx is None:
+                dzdx = dzdx0
+            elif dzdx != dzdx0:
+                return False
+        return True
+
+    '''
+    we end up using Wolfram|Alpha here for part 2... (in Python, this could probably be done with Z3 instead)
+    take any 3 lines, and set up a system of 9 equations with 9 unknowns:
+    (109594306745654, 80328914264436, 84226687990927) (366, 618, 493)
+    (137323984484080, 349288190760710, 242796324042879) (178, -34, -163)
+    (140784750898727, 322363049434014, 241266074487910) (195, 218, -38)
+    initial desired position (x, y, z)
+    initial desired velocity (a, b, c)
+    collisions occur at times (u, v, w)
+
+    plug this into Wolfram|Alpha (math input):
+    {109594306745654 + 366u = x+au, 80328914264436 + 618u = y+bu, 84226687990927 + 493u = z+cu, 137323984484080 + 178v = x+av, 349288190760710 - 34v = y+bv, 242796324042879 - 163v = z+cv, 140784750898727 + 195w = x+aw, 322363049434014 + 218w = y+bw, 241266074487910 - 38w = z+cw}
+    
+    solution:
+    a = 312, b = -116, c = 109, u = 372765961872, v = 56718774607, w = 94539164205, x = 129723668686742, y = 353939130278484, z = 227368817349775
+    '''
+    return (129723668686742+353939130278484+227368817349775)
+
+print(day24())
