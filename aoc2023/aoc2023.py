@@ -1,9 +1,10 @@
 import heapq
 import math
+import networkx as nx
+import random
 from collections import defaultdict, deque
 from functools import cache, reduce
-from re import X
-from tkinter import N, TRUE
+from matplotlib import pyplot as plt
 
 def daytemp():
     f = open('input.txt', 'r').read().strip().split("\n")
@@ -1453,4 +1454,65 @@ def day24():
     '''
     return (129723668686742+353939130278484+227368817349775)
 
-print(day24())
+
+def day25():
+    f = open('input.txt', 'r').read().strip().split("\n")
+
+    nodes = set()
+    edges = []
+    m = defaultdict(set)
+    for row in f:
+        left, right = row.split(": ")
+        dests = right.split()
+        nodes.add(left)
+        m[left] |= set(dests)
+        for d in dests:
+            nodes.add(d)
+            edges.append((left, d))
+            m[d].add(left)
+    nodes = list(nodes)
+    
+    G = nx.Graph()
+    G.add_edges_from(edges, capacity=1)
+
+    while True:
+        node1 = random.choice(nodes)
+        node2 = random.choice(nodes)
+        cut_value, partition = nx.minimum_cut(G, node1, node2)
+        if cut_value == 3:
+            return len(partition[0]) * len(partition[1])
+    
+
+    # alternate solution: visualize the graph, and find the 3 edges in the min-cut:
+    # nx.draw_networkx(G, node_size=100)
+    # plt.show()
+    
+    # we observe they are:
+    mincut = [("jzv", "qvq"), ("bbp", "dvr"), ("tzj", "gtj")]
+    
+    # identify two random nodes that are on opposite sides of the cut:
+    start = "hkm"
+    end = "lpj"
+    
+    for source, dest in mincut:
+        m[source].remove(dest)
+        m[dest].remove(source)
+    
+    # get size of each connected component
+    def bfs(node):
+        queue = set([node])
+        seen = set()
+        while queue:
+            n = queue.pop()
+            for key in m[n]:
+                if key not in seen:
+                    seen.add(key)
+                    queue.add(key)
+        return len(seen)
+    
+    s = bfs(start)
+    e = bfs(end)
+    return s * e
+    
+
+print(day25())
