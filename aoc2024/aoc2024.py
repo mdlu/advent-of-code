@@ -35,4 +35,28 @@ def day1():
         ans += xnum*(y.count(xnum))
     return ans
 
-print(day1())
+
+def day2():
+    f = open('aoc2.txt', 'r').read().strip().split("\n")
+    ans = 0
+
+    def is_valid(nums):
+        return all((1 <= nums[i]-nums[i-1] <= 3) for i in range(1, len(nums))) or all((1 <= nums[i-1]-nums[i] <= 3) for i in range(1, len(nums)))
+
+    for row in f:
+        nums = [int(i) for i in row.split()]
+
+        # part 1
+        if is_valid(nums):
+            ans += 1
+        # include for part 2
+        else:
+            for j in range(len(nums)):
+                newnums = nums[:j] + nums[j+1:]
+                if is_valid(newnums):
+                    ans += 1
+                    break
+        
+    return ans
+
+print(day2())
