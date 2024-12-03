@@ -59,4 +59,33 @@ def day2():
         
     return ans
 
-print(day2())
+def day3():
+    f = open('aoc3.txt', 'r').read().strip()
+    ans = 0
+    
+    def is_valid_num(num):
+        return 1 <= len(num) <= 3 and all(x in "0123456789" for x in num)
+    
+    def is_valid(chunk):
+        chunksplit = chunk.split(",")
+        return is_valid_num(chunksplit[0]) and is_valid_num(chunksplit[1])
+
+    chunks = f.split("mul(")
+    enabled = True
+    for i in range(1, len(chunks)):
+        chunk = chunks[i]
+        chunkbeginning = chunk.split(")")[0]
+        if enabled and is_valid(chunkbeginning):
+            s = chunkbeginning.split(",")
+            ans += int(s[0])*int(s[1])
+        
+        # for part 2
+        for i in range(len(chunk) - 4):
+            if chunk[i:i+4] == "do()":
+                enabled = True
+            elif chunk[i:i+7] == "don't()":
+                enabled = False
+        
+    return ans
+
+print(day3())
