@@ -88,4 +88,38 @@ def day3():
         
     return ans
 
-print(day3())
+def day4():
+    grid = open('aoc4.txt', 'r').read().strip().split("\n")
+    ans = 0
+    
+    def directions(x, y):
+        dirs = [(0,1), (0,-1), (1,0), (-1,0), (1,1), (1,-1), (-1,1), (-1,-1)]
+        options = []
+        for dir in dirs:
+            option = [(x+dir[0]*i, y+dir[1]*i) for i in range(4)]
+            options.append(option)
+        return options
+    
+    def in_range(option):
+        return all(0 <= x[0] < len(grid) for x in option) and all (0 <= x[1] < len(grid[0]) for x in option)
+    
+    # part 1
+    for xpos in range(len(grid)):
+        for ypos in range(len(grid[0])):
+            options = directions(xpos, ypos)
+            for option in options:
+                if in_range(option):
+                    xmas = ''.join([grid[o[0]][o[1]] for o in option])
+                    if xmas == "XMAS":
+                        ans += 1
+
+    # part 2
+    # for xpos in range(1, len(grid)-1):
+    #     for ypos in range(1, len(grid[0])-1):
+    #         if grid[xpos][ypos] == "A":
+    #             if set([grid[xpos-1][ypos-1], grid[xpos+1][ypos+1]]) == {"M", "S"} and set([grid[xpos-1][ypos+1], grid[xpos+1][ypos-1]]) == {"M", "S"}:
+    #                 ans += 1
+
+    return ans
+
+print(day4())
