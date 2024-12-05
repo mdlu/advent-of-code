@@ -9,6 +9,7 @@ def daytemp():
     grid = []
     for i in range(len(f)):
         row = f[i]
+        nums = [int(x) for x in row.split()]
         
     return ans
 
@@ -122,4 +123,58 @@ def day4():
 
     return ans
 
-print(day4())
+def day5():
+    f = open('aoc5.txt', 'r').read().strip().split("\n\n")
+    befores = f[0].split("\n")
+    pagelists = f[1].split("\n")
+
+    ans = 0
+    m = defaultdict(set)
+    
+    for before in befores:
+        bsplit = before.split("|")
+        m[bsplit[0]].add(bsplit[1])
+    
+    def reorder_pagelist(pagelist):
+        p = pagelist.split(",")
+        # build an adjacency list with only the pages in the list
+        mini_graph = defaultdict(set)
+        for i in range(len(p)):
+            mini_graph[p[i]] = set()
+            for j in range(i+1, len(p)):
+                if p[j] in m[p[i]]:
+                    mini_graph[p[i]].add(p[j])
+        
+        # builds printing order backwards
+        new_order = []
+        while len(new_order) < len(p):
+            for key in mini_graph:
+                # find each key that has no restrictions, add it, and remove it as a restriction from all other sets
+                if len(mini_graph[key]) == 0:
+                    new_order.append(key)
+                    for every_key in mini_graph:
+                        mini_graph[every_key].discard(key)
+                    del mini_graph[key]
+                    break
+        
+        return int(new_order[len(new_order)//2])
+
+    for pagelist in pagelists:
+        p = pagelist.split(",")
+        should_add = True
+        for i in range(len(p)):
+            for j in range(i+1, len(p)):
+                if p[i] in m[p[j]]:
+                    should_add = False
+                    break
+        # part 1
+        # if should_add:
+        #     ans += int(p[len(p)//2])
+
+        # part 2
+        if not should_add:
+            ans += reorder_pagelist(pagelist)
+
+    return ans
+
+print(day5())
