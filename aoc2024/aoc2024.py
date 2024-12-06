@@ -177,4 +177,73 @@ def day5():
 
     return ans
 
-print(day5())
+def day6():
+    f = open('aoc6.txt', 'r').read().strip().split("\n")
+    grid = [list(row) for row in f]
+    ans = 0
+    startpos = None
+    m = {
+        (-1,0): (0,1),
+        (0,1): (1,0),
+        (1,0): (0,-1),
+        (0,-1): (-1,0)
+    }
+    startdir = (-1, 0)
+    for i in range(len(grid)):
+        for j in range(len(grid[0])):
+            if grid[i][j] == "^":
+                startpos = (i, j)
+                break
+
+    # part 1
+    # visited = set()
+    # visited.add(startpos)
+    # pos = startpos
+    # dir = startdir
+    # while True:
+    #     newpos = (pos[0] + dir[0], pos[1] + dir[1])
+    #     if not (0 <= newpos[0] < len(grid) and 0 <= newpos[1] < len(grid[0])):
+    #         break
+    #     if grid[newpos[0]][newpos[1]] == "#":
+    #         dir = m[dir]  # turn 90 degrees
+    #     else:
+    #         visited.add(newpos)
+    #         pos = newpos
+    # return len(visited)
+    
+    def obstruct(row, col):
+        seen = set()
+        if grid[row][col] != ".":
+            return False
+
+        grid[row][col] = "#"
+
+        pos = startpos
+        dir = startdir
+        seen.add((pos, dir))
+        succeeds = False
+        while True:
+            newpos = (pos[0] + dir[0], pos[1] + dir[1])
+            if not (0 <= newpos[0] < len(grid) and 0 <= newpos[1] < len(grid[0])):
+                break
+            if (newpos, dir) in seen:
+                # if we've been in the same spot traveling in the same direction before, we have a loop
+                succeeds = True
+                break
+            if grid[newpos[0]][newpos[1]] == "#":
+                dir = m[dir]  # turn 90 degrees
+            else:
+                seen.add((newpos, dir))
+                pos = newpos
+        
+        grid[row][col] = "."
+        return succeeds
+
+    # there is probably a more clever way but brute force takes a minute or two
+    for i in range(len(grid)):
+        for j in range(len(grid[0])):
+            if obstruct(i, j):
+                ans += 1
+    return ans
+
+print(day6())
