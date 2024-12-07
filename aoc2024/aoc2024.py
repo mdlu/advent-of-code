@@ -246,4 +246,26 @@ def day6():
                 ans += 1
     return ans
 
-print(day6())
+def day7():
+    f = open('aoc7.txt', 'r').read().strip().split("\n")
+    ans = 0
+    
+    def possible(total, nums):
+        if len(nums) == 1:
+            return total == nums[0]
+        # part 1
+        # return possible(total, [nums[0]+nums[1]] + nums[2:]) or possible(total, [nums[0]*nums[1]] + nums[2:])
+
+        # part 2
+        return possible(total, [nums[0]+nums[1]] + nums[2:]) or possible(total, [nums[0]*nums[1]] + nums[2:]) or possible(total, [int(str(nums[0]) + str(nums[1]))] + nums[2:])
+
+    for row in f:
+        rowsplit = row.split(": ")
+        total = int(rowsplit[0])
+        nums = [int(x) for x in rowsplit[1].split()]
+        if possible(total, nums):
+            ans += total
+        
+    return ans
+
+print(day7())
