@@ -268,4 +268,48 @@ def day7():
         
     return ans
 
-print(day7())
+
+def day8():
+    f = open('aoc8.txt', 'r').read().strip().split("\n")
+    m = defaultdict(set)
+
+    for i in range(len(f)):
+        for j in range(len(f[0])):
+            val = f[i][j]
+            if val != ".":
+                m[val].add((i,j))
+
+    def get_antinodes(p1, p2):
+        # part 1
+        # diff = (p1[0] - p2[0], p1[1] - p2[1])
+        # a1 = (p1[0] + diff[0], p1[1] + diff[1])
+        # a2 = (p2[0] - diff[0], p2[1] - diff[1])
+        # return {x for x in [a1, a2] if 0<=x[0]<len(f) and 0<=x[1]<len(f[0])}
+
+        # part 2
+        diff = (p1[0]-p2[0], p1[1]-p2[1])
+        gcd = math.gcd(diff[0], diff[1])
+        newdiff = (diff[0] // gcd, diff[1] // gcd)
+        antinodes = set()
+        oldp1 = p1
+        while (0<=p1[0]<len(f) and 0<=p1[1]<len(f[0])):
+            antinodes.add(p1)
+            p1 = (p1[0] + newdiff[0], p1[1] + newdiff[1])
+        # reset p1, and now move in the other direction
+        p1 = oldp1
+        while (0<=p1[0]<len(f) and 0<=p1[1]<len(f[0])):
+            antinodes.add(p1)
+            p1 = (p1[0] - newdiff[0], p1[1] - newdiff[1])
+
+        return antinodes
+    
+    antinodes = set()
+    for key in m:
+        pts = list(m[key])
+        for i in range(len(pts)):
+            for j in range(i+1, len(pts)):
+                antinodes.update(get_antinodes(pts[i], pts[j]))
+
+    return len(antinodes)
+
+print(day8())
