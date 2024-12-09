@@ -312,4 +312,67 @@ def day8():
 
     return len(antinodes)
 
-print(day8())
+def day9():
+    f = open('aoc9.txt', 'r').read().strip()
+    ans = 0
+
+    # maps each ID to the indices that belong to it on the original disk
+    m = defaultdict(list)
+
+    sizes = [int(f[i]) for i in range(0, len(f), 2)]
+    totalnums = sum(sizes)
+
+    counter = 0
+    allnums = []  # lists out every ID in order, leaving out spaces
+    empties = []  # for each empty space, lists a tuple of (starting position, length of space)
+    for i in range(0, len(f)):
+        if i % 2 == 0:
+            for _ in range(int(f[i])):
+                allnums.append(i//2)
+                m[i//2].append(counter)
+                counter += 1
+        else:
+            empties.append((counter, int(f[i])))
+            counter += int(f[i])
+
+    # part 1
+    # pos = 0  # index in the input f, moving forwards
+    # backpos = len(allnums) - 1  # index in allnums, going backwards
+    # pointer = pos  # starting location
+    # while pointer < totalnums:
+    #     num = int(f[pos])
+    #     for _ in range(num):
+    #         if pointer >= totalnums:
+    #             break
+    #         if pos % 2 == 0:
+    #             ans += (pointer * (pos // 2))
+    #             pointer += 1
+    #         else:
+    #             ans += (pointer * allnums[backpos])
+    #             backpos -= 1
+    #             pointer += 1
+    #     pos += 1
+    
+    # part 2
+    pos = len(sizes) - 1  # index in "sizes", moving backwards
+    while pos > 0:
+        moved = False
+        for e in range(pos):  # only check empty spaces that come before the block we are moving
+            empty = empties[e]
+            if sizes[pos] <= empty[1]:
+                moved = True
+                for k in range(sizes[pos]):
+                    ans += ((empty[0] + k) * pos)
+                empties[e] = (empty[0] + sizes[pos], empty[1] - sizes[pos])
+                break
+
+        # if there was no space for the block, then use its current positions for the total, which are stored in m 
+        if not moved:
+            for p in m[pos]:
+                ans += pos * p
+
+        pos -= 1
+
+    return ans
+
+print(day9())
