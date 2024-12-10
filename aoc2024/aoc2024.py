@@ -375,4 +375,44 @@ def day9():
 
     return ans
 
-print(day9())
+def day10():
+    f = open('aoc10.txt', 'r').read().strip().split("\n")
+    ans = 0
+    m = defaultdict(set)
+    grid = []
+    for row in f:
+        grid.append([int(i) for i in row])
+
+    trailheads = set()
+    for i in range(len(grid)):
+        for j in range(len(grid[0])):
+            if grid[i][j] == 0:
+                trailheads.add((i, j))
+    
+    def score(trailhead, pos):
+        dirs = [(1,0), (-1,0), (0,1), (0,-1)]
+        val = grid[pos[0]][pos[1]]
+        if val == 9:
+            m[trailhead].add(pos)
+            return 1
+
+        total_score = 0
+        for dir in dirs:
+            newpos = (dir[0]+pos[0], dir[1]+pos[1])
+            if 0 <= newpos[0] < len(grid) and 0 <= newpos[1] < len(grid[0]) and grid[newpos[0]][newpos[1]] == val+1:
+                total_score += score(trailhead, newpos)
+        return total_score
+        
+    # part 1
+    # for trailhead in trailheads:
+    #     score(trailhead, trailhead)
+    # for trailhead in m:
+    #     ans += len(m[trailhead])
+
+    # part 2
+    for trailhead in trailheads:
+        ans += score(trailhead, trailhead)
+
+    return ans
+
+print(day10())
