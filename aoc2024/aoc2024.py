@@ -415,4 +415,38 @@ def day10():
 
     return ans
 
-print(day10())
+def day11():
+    f = open('aoc11.txt', 'r').read().strip()
+    stones = [int(x) for x in f.split()]
+    ans = 0
+    dp = {}
+    
+    def blink(stone, remaining):
+        if (stone, remaining) in dp:
+            return dp[(stone, remaining)]
+        
+        if remaining == 0:
+            result = 1
+        elif stone == 0:
+            result = blink(1, remaining-1)
+        elif len(str(stone)) % 2 == 0:
+            stonestr = str(stone)
+            stone1 = int(stonestr[:len(stonestr)//2])
+            stone2 = int(stonestr[len(stonestr)//2:])
+            result = blink(stone1, remaining-1) + blink(stone2, remaining-1)
+        else:
+            result = blink(2024*stone, remaining-1)
+        
+        dp[(stone, remaining)] = result
+        return result
+            
+    for stone in stones:
+        # part 1
+        # ans += blink(stone, 25)
+
+        # part 2
+        ans += blink(stone, 75)
+    
+    return ans
+
+print(day11())
