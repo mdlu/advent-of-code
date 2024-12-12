@@ -449,4 +449,70 @@ def day11():
     
     return ans
 
-print(day11())
+def day12():
+    f = open('aoc12.txt', 'r').read().strip().split("\n")
+    ans = 0
+    unvisited = set((i, j) for i in range(len(f)) for j in range(len(f[0])))
+    dirs = [(1,0), (-1,0), (0,1), (0,-1)]
+    
+    # repeatedly take an unvisited location, floodfill out and remove all visited locations from unvisited, compute the score, and repeat
+    while unvisited:
+        loc = unvisited.pop()
+        val = f[loc[0]][loc[1]]
+        current_region = set()
+        next_candidates = set([loc])
+        while next_candidates:
+            next_next_candidates = set()
+            for candidate in next_candidates:
+                current_region.add(candidate)
+                unvisited.discard(candidate)
+                for dir in dirs:
+                    newloc = (candidate[0]+dir[0], candidate[1]+dir[1])
+                    if newloc in unvisited and 0<=newloc[0]<len(f) and 0<=newloc[1]<len(f[0]) and f[newloc[0]][newloc[1]] == val:
+                        next_next_candidates.add(newloc)
+            next_candidates = next_next_candidates
+        
+        area = len(current_region)
+        perimeter = 0
+        edges = defaultdict(list)
+        for r in current_region:
+            for dir in dirs:
+                newloc = (r[0]+dir[0], r[1]+dir[1])
+                if newloc not in current_region:
+                    edges[dir].append(r)
+                    perimeter += 1
+        
+        # part 1
+        # ans += area * perimeter
+
+        # part 2
+        # to calculate number of sides, we treat vertical / horizontal edges differently
+        # group the edges based on which of the 4 directions they face, then within each group, sort values in the direction perpendicular to the direction the edges face
+        # once sorted, traverse from left to right -- if two values share one coordinate and the other differs by 1, then they continue to be part of the same edge
+        numedges = 0
+        for dir in [(1,0), (-1,0)]:
+            sortedges = sorted(edges[dir])
+            if not sortedges:
+                continue
+            else:
+                numedges += 1
+                for i in range(1, len(sortedges)):
+                    current = sortedges[i-1]
+                    if not (sortedges[i][0] == current[0] and sortedges[i][1] == current[1]+1):
+                        numedges += 1
+        
+        for dir in [(0,1), (0,-1)]:
+            sortedges = sorted(edges[dir], key=lambda x: (x[1], x[0]))  # sort this in the reverse direction
+            if not sortedges:
+                continue
+            else:
+                numedges += 1
+                for i in range(1, len(sortedges)):
+                    current = sortedges[i-1]
+                    if not (sortedges[i][0] == current[0]+1 and sortedges[i][1] == current[1]):  # compare by the other coordinate this time
+                        numedges += 1
+        ans += area * numedges
+        
+    return ans
+
+print(day12())
