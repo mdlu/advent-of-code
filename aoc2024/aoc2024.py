@@ -515,4 +515,37 @@ def day12():
         
     return ans
 
-print(day12())
+def day13():
+    f = open('aoc13.txt', 'r').read().strip().split("\n\n")
+    ans = 0
+    for row in f:
+        data = row.split("\n")
+        amoves = [int(i[2:]) for i in data[0].split(": ")[1].split(", ")]
+        bmoves = [int(i[2:]) for i in data[1].split(": ")[1].split(", ")]
+
+        # part 1
+        # prizes = [int(i[2:]) for i in data[2].split(": ")[1].split(", ")]
+        # minval = None
+        # for a in range(min(prizes[0]//amoves[0], prizes[1]//amoves[1])+1):
+        #     xdiff = prizes[0] - a*amoves[0]
+        #     ydiff = prizes[1] - a*amoves[1]
+        #     if xdiff % bmoves[0] == 0 and ydiff % bmoves[1] == 0 and xdiff//bmoves[0] == ydiff//bmoves[1]:
+        #         score = 3*a + xdiff//bmoves[0]
+        #         if minval is None or score < minval:
+        #             minval = score
+        # if minval is not None:
+        #     ans += minval
+
+        # part 2
+        # in theory this shouldn't always work because we're not minimizing 3a+b... but for the given input it seems there is always only one solution for (a,b)
+        prizes = [int(i[2:])+10000000000000 for i in data[2].split(": ")[1].split(", ")]
+        # initially I used sympy but rewrote this because we can just solve the system of equations directly
+        a = (prizes[0]*bmoves[1] - prizes[1]*bmoves[0]) // (amoves[0]*bmoves[1] - amoves[1]*bmoves[0])
+        b = (prizes[0]*amoves[1] - prizes[1]*amoves[0]) // (amoves[1]*bmoves[0] - amoves[0]*bmoves[1])
+        # check for nonnegative integer solutions
+        if a >= 0 and b >= 0 and a*amoves[0] + b*bmoves[0] == prizes[0] and a*amoves[1] + b*bmoves[1] == prizes[1]:
+            ans += 3*a + b
+
+    return ans
+
+print(day13())
