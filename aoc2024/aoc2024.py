@@ -548,4 +548,54 @@ def day13():
 
     return ans
 
-print(day13())
+def day14():
+    f = open('aoc14.txt', 'r').read().strip().split("\n")
+    robots = []
+    width = 101
+    height = 103
+    for row in f:
+        rowsplit = row.split(" ")
+        ps = [int(x) for x in rowsplit[0][2:].split(",")]
+        vs = [int(x) for x in rowsplit[1][2:].split(",")]
+        p0 = (ps[0] + vs[0]*100) % width
+        p1 = (ps[1] + vs[1]*100) % height
+        robots.append((p0, p1))
+
+    # part 1
+    # ans = 1
+    # q1 = ((0, width//2-1), (0, height//2-1))
+    # q2 = ((0, width//2-1), (height//2+1, height-1))
+    # q3 = ((width//2+1, width-1), (0, height//2-1))
+    # q4 = ((width//2+1, width-1), (height//2+1, height-1))
+    # qs = [q1, q2, q3, q4]
+    # for q in qs:
+    #     total = 0
+    #     for r in robots:
+    #         if q[0][0] <= r[0] <= q[0][1] and q[1][0] <= r[1] <= q[1][1]:
+    #             total += 1
+    #     ans *= total
+    # return ans
+
+    # part 2
+    grid = [["." for _ in range(width)] for _ in range(height)]
+    robots = []
+    for row in f:
+        rowsplit = row.split(" ")
+        ps = [int(x) for x in rowsplit[0][2:].split(",")]
+        vs = [int(x) for x in rowsplit[1][2:].split(",")]
+        robots.append((ps, vs))
+    count = 0
+    while True:
+        for robot in robots:
+            robot[0][0] = (robot[0][0] + robot[1][0]) % width
+            robot[0][1] = (robot[0][1] + robot[1][1]) % height
+        count += 1
+        # not a perfect heuristic, but it turns out the first time none of the robots overlap is the time they show the image
+        if len(set(tuple(robot[0]) for robot in robots)) == len(robots):
+            for robot in robots:
+                grid[robot[0][1]][robot[0][0]] = "A"
+            print('\n'.join([''.join(row) for row in grid]))
+            break
+    return count
+
+print(day14())
